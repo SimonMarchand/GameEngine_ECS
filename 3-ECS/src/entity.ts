@@ -30,6 +30,7 @@ export class Entity implements IEntity {
   static componentCreator = ComponentFactory.create;
 
   private components = new Map<string, IComponent>();
+  private children = new Map<string, IEntity>();
 
 
   // ## Méthode *addComponent*
@@ -52,14 +53,14 @@ export class Entity implements IEntity {
   // La méthode *addChild* ajoute à l'objet courant un objet
   // enfant.
   addChild(objectName: string, child: IEntity) {
-    throw new Error('Not implemented');
+    this.children.set(objectName, child);
   }
 
   // ## Fonction *getChild*
   // La fonction *getChild* retourne un objet existant portant le
   // nom spécifié, dont l'objet courant est le parent.
   getChild(objectName: string): IEntity | undefined {
-    throw new Error('Not implemented');
+    return this.children.get(objectName);
   }
 
   // ## Méthode *walkChildren*
@@ -67,7 +68,7 @@ export class Entity implements IEntity {
   // entité et appelle la fonction `fn` pour chacun, afin
   // d'implémenter le patron de conception [visiteur](https://fr.wikipedia.org/wiki/Visiteur_(patron_de_conception)).
   walkChildren(fn: IEntityWalker): void {
-    throw new Error('Not implemented');
+    this.children.forEach(fn)
   }
 
   // ## Méthode *walkComponent*
@@ -75,6 +76,6 @@ export class Entity implements IEntity {
   // entité et appelle la fonction `fn` pour chacun, afin
   // d'implémenter le patron de conception [visiteur](https://fr.wikipedia.org/wiki/Visiteur_(patron_de_conception)).
   walkComponent(fn: IComponentWalker): void {
-    throw new Error('Not implemented');
+    this.components.forEach(fn);
   }
 }
