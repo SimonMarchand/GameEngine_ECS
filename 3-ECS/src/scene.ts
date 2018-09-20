@@ -54,27 +54,30 @@ export class Scene {
   private constructor(description: ISceneDesc) {
     this.root = new Entity();
     this.componentsDescriptions = new Map<IComponent, ISceneDesc>();
-    this.createChildren(this.root, description); // Appel à la fonction de récurrence pour instancier les                                                     Entities
+    this.createChildren(this.root, description); // Appel à la fonction récursive pour instancier les                                                     Entities
   }
 
+  // Fonction récursive parcourant la description des enfants de l'entité passée en paramètre
   createChildren(entity: IEntity, childrenDescription: ISceneDesc){
     Object.keys(childrenDescription).forEach((childName) => { 
-      let child = this.addChildAndComponents(entity, childName, childrenDescription)
+      let child = this.createChildAndComponents(entity, childName, childrenDescription)
       this.createChildren(child, childrenDescription[childName].children);
     });
   }
 
-  addChildAndComponents(entity : IEntity, childName : string, childrenDescription: ISceneDesc): IEntity{
+  // Ajoute un enfant et ses composants
+  createChildAndComponents(entity : IEntity, childName : string, childrenDescription: ISceneDesc): IEntity{
     let child = new Entity();
     entity.addChild(childName, child);
     this.createComponents(child, childName, childrenDescription);
     return child;
   }
 
+  // Créé les composants d'une entité grace à la description de la scene
   private createComponents(entity: IEntity, entityName : string, childrenDescription: ISceneDesc){
     Object.keys(childrenDescription[entityName].components).forEach((componentType) => {
       this.componentsDescriptions.set(entity.addComponent(componentType),
-                                      childrenDescription[entityName].components[componentType]);
+                                      childrenDescription[entityName].components[componentType]); // Sauvegarde du component et de sa description
     });
   }
 
@@ -85,11 +88,11 @@ export class Scene {
   }
 
   private setupChildren(entity: IEntity, setupChildrenPromises: Promise<any>[]) {
-    entity.walkChildren((child) => {
-      child.walkComponent((component) => {
-        setupChildrenPromises.push(<Promise<any>> component.setup(this.componentsDescriptions.get(component)));
+    entity.walkChildren((child) => { //Pour chaque enfants 
+      child.walkComponent((component) => { //Pour chaque composants
+        setupChildrenPromises.push(<Promise<any>> component.setup(this.componentsDescriptions.get(component))); //Ajout d'une promesse dans le tableau de promesses, permettant de savoir que le composant est setup
       });
-      this.setupChildren(child, setupChildrenPromises);
+      this.setupChildren(child, setupChildrenPromises); 
     });
   }
 
@@ -100,6 +103,7 @@ export class Scene {
     return this.findObjectInChildren(this.root, objectName);
   }
 
+  // Fonction récursive pour retrouver l'entité dans la scene 
   findObjectInChildren(entity: IEntity, objectName: string): any {
     let searchedObject = entity.getChild(objectName);
     if (searchedObject !== undefined){
@@ -122,11 +126,12 @@ export class Scene {
     return this.walkChildren(this.root, "root", fn)
   }
   
+  // Fonction récursive pour parcourrir les entités et appeler la fonction `fn`
   walkChildren(entity: IEntity, childName: string, fn: ISceneWalker): Promise<any> {
     let promise = Promise.resolve(); 
     entity.walkChildren((entity, childName) => {
-      promise = promise.then(() => fn(entity, childName))
-        .then(() => this.walkChildren(entity, childName, fn));
+      promise = promise.then(() => fn(entity, childName)) // Après avoir réalisé la fonction `fn` ...
+        .then(() => this.walkChildren(entity, childName, fn)); // ... on réalise la récurrence  
     });
     return promise;
   }
